@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.novacartografia.kanbanprojectmanagement.models.Employee
+import com.novacartografia.kanbanprojectmanagement.models.Project
+import com.novacartografia.kanbanprojectmanagement.ui.projects.ProjectViewModel
 import com.novacartografia.kanbanprojectmanagement.ui.theme.Blue100
 import com.novacartografia.kanbanprojectmanagement.ui.theme.Blue500
 import com.novacartografia.kanbanprojectmanagement.ui.theme.Gray100
@@ -74,7 +76,8 @@ import com.novacartografia.kanbanprojectmanagement.ui.theme.Yellow500
 @Composable
 fun EmployeeListView(
     modifier: Modifier,
-    employeesViewModel: EmployeeViewModel = viewModel()
+    employeesViewModel: EmployeeViewModel = viewModel(),
+    projectVM : ProjectViewModel = viewModel()
 ) {
     val employees = employeesViewModel.employees.observeAsState(initial = emptyList())
     val loading = employeesViewModel.loading.observeAsState(initial = false)
@@ -89,6 +92,10 @@ fun EmployeeListView(
             employee.name.contains(searchQuery.value, ignoreCase = true) ||
                     employee.job.contains(searchQuery.value, ignoreCase = true)
         }
+    }
+
+    LaunchedEffect(Unit) {
+        projectVM.getProjects()
     }
 
     LaunchedEffect(key1 = Unit) {
@@ -125,7 +132,7 @@ fun EmployeeListView(
             } else {
                 LazyColumn {
                     items(filteredEmployees) { employee ->
-                        EmployeeItem(employee = employee)
+                        projectVM.projects.value?.let { EmployeeItem(employee = employee, projectList = it) } // Pasar lista de proyectos
                     }
                 }
             }
@@ -266,7 +273,7 @@ private fun EmptyStateMessage() {
 }
 
 @Composable
-fun EmployeeItem(employee: Employee) {
+fun EmployeeItem(employee: Employee, projectList: List<Project> = emptyList()) {
     val colorByJob = when (employee.job) {
         "TOPÓGRAFO/A DE CAMPO" -> Lime500
         "Auxiliar de topografía" -> Yellow500
@@ -275,6 +282,8 @@ fun EmployeeItem(employee: Employee) {
         "Piloto de Seguridad de Circulación (PSC)" -> Blue500
         else -> Lime600
     }
+
+    val project = projectList.find { it.id == employee.project_id }
 
     Card(
         modifier = Modifier
@@ -306,12 +315,21 @@ fun EmployeeItem(employee: Employee) {
 
                 Spacer(modifier = Modifier.weight(0.5f))
 
-                Text(
-                    text = employee.project_id.toString(),
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium,
-                    color = Gray700,
-                )
+                if (project != null) {
+                    Text(
+                        text = project.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Gray700,
+                    )
+                }else{
+                    Text(
+                        text = "Sin Proyecto",
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Medium,
+                        color = Gray700,
+                    )
+                }
 
                 Card(
                     colors = CardDefaults.cardColors(containerColor = colorByJob),

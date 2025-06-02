@@ -46,20 +46,20 @@ class ProjectMovementLineViewModel : ViewModel() {
 
                 val result = repository.getProjectMovementLine()
 
-                // Log detallado de los datos recibidos
+                /* Log detallado de los datos recibidos
                 result.forEach { movement ->
                     Log.d("MovementViewModel", "Movimiento: ID=${movement.id}, " +
                             "EmpleadoID=${movement.employee_id}, " +
                             "ProyectoID=${movement.project_id}, " +
                             "Proyecto=${movement.project_name}, " +
                             "ProyectoAnterior=${movement.previous_project_name}")
-                }
+                } */
 
                 _movements.value = result
-                Log.d("MovementViewModel", "Movimientos cargados: ${result.size}")
+                //Log.d("MovementViewModel", "Movimientos cargados: ${result.size}")
             } catch (e: Exception) {
                 _error.value = "Error al cargar los movimientos: ${e.message}"
-                Log.e("MovementViewModel", "Error al cargar movimientos", e)
+                //Log.e("MovementViewModel", "Error al cargar movimientos", e)
             } finally {
                 _loading.value = false
             }
@@ -76,10 +76,10 @@ class ProjectMovementLineViewModel : ViewModel() {
                 val result = repository.getProjectMovementLine(id)
                 onResult(result)
 
-                Log.d("MovementViewModel", "Movimiento obtenido: $result")
+                //Log.d("MovementViewModel", "Movimiento obtenido: $result")
             } catch (e: Exception) {
                 _error.value = "Error al obtener el movimiento: ${e.message}"
-                Log.e("MovementViewModel", "Error al obtener movimiento", e)
+                //Log.e("MovementViewModel", "Error al obtener movimiento", e)
                 onResult(null)
             } finally {
                 _loading.value = false
@@ -120,7 +120,7 @@ class ProjectMovementLineViewModel : ViewModel() {
                 // Resto del código...
             }catch (error: Exception) {
                 _error.value = "Error al crear el movimiento: ${error.message}"
-                Log.e("MovementViewModel", "Error al crear movimiento", error)
+                //Log.e("MovementViewModel", "Error al crear movimiento", error)
                 onError(_error.value ?: "Error desconocido")
             } finally {
                 _loading.value = false

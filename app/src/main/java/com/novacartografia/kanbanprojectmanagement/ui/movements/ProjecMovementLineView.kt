@@ -1,6 +1,7 @@
 package com.novacartografia.kanbanprojectmanagement.ui.movements
 
 import android.util.Log
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
@@ -48,6 +51,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.novacartografia.kanbanprojectmanagement.models.Employee
@@ -56,20 +60,31 @@ import com.novacartografia.kanbanprojectmanagement.models.ProjectMovementLine
 import com.novacartografia.kanbanprojectmanagement.ui.employees.EmployeeViewModel
 import com.novacartografia.kanbanprojectmanagement.ui.projects.ProjectLocationViewModel
 import com.novacartografia.kanbanprojectmanagement.ui.projects.ProjectViewModel
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Blue500
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Gray100
 import com.novacartografia.kanbanprojectmanagement.ui.theme.Gray300
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Green300
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Lime500
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Lime600
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Orange300
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Orange500
 import com.novacartografia.kanbanprojectmanagement.ui.theme.White
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Yellow300
+import com.novacartografia.kanbanprojectmanagement.ui.theme.Yellow500
 import java.text.SimpleDateFormat
 import java.util.Locale
+import java.util.TimeZone
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProjectMovementLineView(
+
+    modifier: Modifier = Modifier,
     onMovementClick: (ProjectMovementLine) -> Unit,
     onAddMovementClick: () -> Unit,
     viewModel: ProjectMovementLineViewModel = viewModel(),
     employeesVM: EmployeeViewModel = viewModel(),
     projectVM: ProjectViewModel = viewModel(),
-    modifier: Modifier = Modifier
 ) {
     val movements by viewModel.movements.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -80,22 +95,46 @@ fun ProjectMovementLineView(
 
     var searchQuery by remember { mutableStateOf("") }
 
+    LaunchedEffect(Unit) {
+        employeesVM.getEmployees()
+        projectVM.getProjects()
+    }
+
     val filteredMovements = if (searchQuery.isEmpty()) {
         movements
     } else {
         movements.filter { movement ->
-            Log.d("ProjectMovementLineView", "Nombre anterior: ${movement.previous_project_name}")
-            Log.d("ProjectMovementLineView", "Nombre actual: ${movement.project_name}")
+            // Normalizar la consulta eliminando acentos
+            val query = searchQuery.lowercase().removeAccents()
+            val project = projectList.value.find { it.id == movement.project_id }
+            val previousProject = projectList.value.find { it.id == movement.previous_project_id }
+            val employee = employeeList.value.find { it.id == movement.employee_id }
 
-            // Convertir la consulta a minúsculas para hacer una búsqueda sin distinción de mayúsculas
-            val query = searchQuery.lowercase()
+            // Normalizar los textos para buscar
+            val projectName = project?.name?.lowercase()?.removeAccents() ?: ""
+            val prevProjectName = previousProject?.name?.lowercase()?.removeAccents() ?: ""
+            val employeeName = employee?.name?.lowercase()?.removeAccents() ?: ""
 
-            // Filtrar por id de proyecto, empleado, fecha o nombres de proyecto
-            movement.project_id.toString().contains(query) ||
-                    movement.employee_id.toString().contains(query) ||
-                    movement.previous_project_name?.lowercase()?.contains(query) == true ||
-                    movement.project_name?.lowercase()?.contains(query) == true ||
-                    movement.date.contains(query)
+            // Para búsqueda de fechas
+            val dateMatches = try {
+                val isoFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+                isoFormat.timeZone = TimeZone.getTimeZone("UTC")
+                val displayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+                val date = isoFormat.parse(movement.date)
+                val formattedDate = date?.let { displayFormat.format(it) } ?: ""
+
+                formattedDate.lowercase().contains(query)
+            } catch (e: Exception) {
+                movement.date.lowercase().contains(query)
+            }
+
+            // Filtrar utilizando textos normalizados
+            movement.id.toString().contains(query) ||
+                    employeeName.contains(query) ||
+                    prevProjectName.contains(query) ||
+                    projectName.contains(query) ||
+                    dateMatches
         }
     }
 
@@ -128,7 +167,12 @@ fun ProjectMovementLineView(
         Column(
             modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(
+                    top = 8.dp,
+                    bottom = paddingValues.calculateBottomPadding(),
+                    start = paddingValues.calculateBottomPadding(),
+                    end = paddingValues.calculateEndPadding(layoutDirection = LayoutDirection.Ltr),
+                )
         ) {
             // Campo de búsqueda
             OutlinedTextField(
@@ -136,7 +180,7 @@ fun ProjectMovementLineView(
                 onValueChange = { searchQuery = it },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp, vertical = 2.dp),
                 placeholder = { Text("Buscar movimientos...") },
                 leadingIcon = {
                     Icon(
@@ -232,15 +276,19 @@ fun MovementCard(
 
     val employee = employeeList.find { it.id == movement.employee_id }
 
-    if (employee != null) {
-        Log.d("MovementCard", "Empleado encontrado: ${employee.name}")
-    }else{
-        Log.d("MovementCard", "Empleado no encontrado para ID: ${movement.employee_id}")
-    }
 
     // Usar los nombres de campos correctos
-    val fromProject = movement.previous_project_name ?: "Desconocido"
-    val toProject = movement.project_name ?: "Desconocido"
+    val fromProject = projectList.find { it.id == movement.previous_project_id }
+    val toProject = projectList.find { it.id == movement.project_id }
+
+    val colorByJob = when (employee?.job) {
+        "TOPÓGRAFO/A DE CAMPO" -> Lime500
+        "Auxiliar de topografía" -> Yellow500
+        "Jefe de Proyectos" -> Orange300
+        "Jefe Departamento Proyectos" -> Orange500
+        "Piloto de Seguridad de Circulación (PSC)" -> Blue500
+        else -> Lime600
+    }
 
     Card(
         modifier = Modifier
@@ -248,6 +296,7 @@ fun MovementCard(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable { onClick() },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(width = 3.dp, color = colorByJob),
         colors = CardDefaults.cardColors(containerColor = White)
     ) {
         Column(
@@ -260,7 +309,7 @@ fun MovementCard(
                 text = "Movimiento: ${employee?.name ?: "Empleado #${movement.employee_id}"}",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -288,15 +337,27 @@ fun MovementCard(
                         .background(MaterialTheme.colorScheme.primaryContainer)
                         .padding(8.dp)
                 ) {
-                    Text(
-                        text = fromProject,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                    if (fromProject != null) {
+                        Text(
+                            text = fromProject.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }else{
+                        Text(
+                            text = "Sin Proyecto",
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
 
                 // Flecha
@@ -314,15 +375,27 @@ fun MovementCard(
                         .background(MaterialTheme.colorScheme.secondaryContainer)
                         .padding(8.dp)
                 ) {
-                    Text(
-                        text = toProject,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                    if (toProject != null) {
+                        Text(
+                            text = toProject.name,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }else{
+                        Text(
+                            text = "Sin Proyecto",
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }
@@ -636,4 +709,9 @@ fun ErrorCard(errorMessage: String) {
             )
         }
     }
+}
+
+fun String.removeAccents(): String {
+    val normalizedString = java.text.Normalizer.normalize(this, java.text.Normalizer.Form.NFD)
+    return normalizedString.replace(Regex("\\p{InCombiningDiacriticalMarks}+"), "")
 }

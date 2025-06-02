@@ -16,14 +16,14 @@ class ProjectMovementLineRepository {
                 val response = apiService.getProjectMovementLine()
 
                 // Log de la respuesta bruta
-                Log.d("MovementRepository", "Respuesta: ${response.raw().toString()}")
+                //Log.d("MovementRepository", "Respuesta: ${response.raw().toString()}")
 
                 val result = response.body() ?: emptyList()
 
-                // Log detallado
+                /* Log detallado
                 result.forEach { movement ->
                     Log.d("MovementRepository", "Movimiento JSON: ${movement}")
-                }
+                } */
 
                 result
             } catch (e: Exception) {
