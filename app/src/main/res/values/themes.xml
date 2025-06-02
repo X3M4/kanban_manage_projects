@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.KanbanProjectManagement" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.KanbanMapCompat" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Personaliza colores si lo deseas -->
+        <item name="colorPrimary">#6200EE</item>
+        <item name="colorPrimaryDark">#3700B3</item>
+        <item name="colorAccent">#03DAC5</item>
+        <item name="android:windowBackground">#FFFFFF</item>
+
+        <!-- Opcional: sin barra de acción -->
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+</resources>

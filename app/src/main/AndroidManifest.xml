@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:name=".KanbanApplication"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.KanbanProjectManagement"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="true"
+        tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:theme="@style/Theme.KanbanProjectManagement">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".BaseActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".EmployeeListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.KanbanProjectManagement" />
+
+        <activity
+            android:name=".MapActivity"
+            android:exported="false"
+            android:theme="@style/Theme.KanbanProjectManagement" />
+
+        <meta-data
+            android:name="com.mapbox.token"
+            android:value="pk.eyJ1Ijoibm92YWNhcnRvZ3JhZmlhIiwiYSI6ImNtYXBoZ2YxdjBnYWgya3M4ZnR5bG4yMzkifQ.8B4qJoezCHcorL7zSwtJoA" />
+
+        <activity
+            android:name=".ProjectListActivity"
+            android:exported="false"
+            android:label="Gestión de Proyectos"
+            android:theme="@style/Theme.KanbanProjectManagement" />
+
+        <activity
+            android:name=".ProjectMovementLineActivity"
+            android:exported="false"
+            android:label="Movimientos de Proyectos" />
+
+    </application>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+
+
+</manifest>
